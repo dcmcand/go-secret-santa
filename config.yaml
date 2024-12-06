@@ -1,0 +1,6 @@
+email:
+    subject: "Secret Santa" # This is the subject of the secret santa email
+    address: "santa" # This along with the domain is used to create the email address of the sender
+    domain: "example.com" # This is the domain of the email
+    sender:
+        name: "Santa Claus" # This is the name of the sender for use in the email body
