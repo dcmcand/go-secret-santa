@@ -8,7 +8,25 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func GenerateConfigFile() error {
+func GenerateConfigFiles(configPath string, generateConfig bool, participantsPath string, generateParticipants bool) error {
+	if generateConfig {
+		err := generateConfigFile(configPath)
+		if err != nil {
+			return fmt.Errorf("error generating config file: %v\n", err)
+		}
+	}
+
+	if generateParticipants {
+		err := generateParticipantsFile(participantsPath)
+		if err != nil {
+			return fmt.Errorf("error generating participants file: %v\n", err)
+		}
+	}
+
+	return nil
+}
+
+func generateConfigFile(path string) error {
 	config := &yaml.Node{
 		Kind: yaml.DocumentNode,
 		Content: []*yaml.Node{
@@ -100,21 +118,17 @@ func GenerateConfigFile() error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile("config.yaml", y, 0644)
+	err = os.WriteFile(path, y, 0644)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GenerateParticipantsFile() error {
-	_, err := os.Stat("./participants.csv")
-	if err == nil {
-		return fmt.Errorf("participants.csv already exists")
-	}
-	f, err := os.Create("participants.csv")
+func generateParticipantsFile(path string) error {
+	f, err := os.Create(path)
 	if err != nil {
-		return fmt.Errorf("error creating participants.csv: %v", err)
+		return fmt.Errorf("error creating participants file at %s: %v", path, err)
 	}
 	defer f.Close()
 	content := [][]string{

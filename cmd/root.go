@@ -15,43 +15,70 @@ import (
 	"github.com/spf13/viper"
 )
 
+func getConfigurationFiles(cmd *cobra.Command) (string, string, error) {
+	// Get participants Path
+	participantsPath, err := cmd.Flags().GetString("participants")
+	if err != nil || participantsPath == "" {
+		participantsPath = "./participants.csv"
+	}
+	// Get config path
+	configPath, err := cmd.Flags().GetString("config")
+	if err != nil || configPath == "" {
+		configPath = "./config.yaml"
+	}
+
+	return configPath, participantsPath, nil
+}
+
+func checkConfigFiles(configPath, participantsPath string) error {
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
+		return fmt.Errorf("config file does not exist at %s", configPath)
+	}
+	if _, err := os.Stat(participantsPath); os.IsNotExist(err) {
+		return fmt.Errorf("participants file does not exist at %s", participantsPath)
+	}
+	return nil
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "secret-santa",
 	Short: "Email secret santa messages to a group",
 	Long: `Emails a list of interests to a random recipient from a list.
 	If a partner is defined, a person will not get their partner.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Get participants
-		participants, err := cmd.Flags().GetString("participants")
-		if err != nil || participants == "" {
-			fmt.Printf("No path set for participants\n")
-			_, err := os.Stat("./participants.csv")
-			if err != nil {
-				fmt.Printf("No participants file found. Generating Skeleton at ./participants.csv\n")
-				// err = conf.GenerateParticipantsFile()
-				// if err != nil {
-				// 	fmt.Printf("error generating participants file: %v\n", err)
-				// 	os.Exit(1)
-				// }
-				os.Exit(1)
-			}
-			participants = "./participants.csv"
+
+		configPath, participantsPath, err := getConfigurationFiles(cmd)
+		if err != nil {
+			fmt.Printf("error getting configuration files: %v\n", err)
+			os.Exit(1)
 		}
 
-		// Get config
-		configPath, err := cmd.Flags().GetString("config")
-		if err != nil || configPath == "" {
-			_, err := os.Stat("./config.yaml")
+		// Get generate config file flag
+		generateConfigFile, err := cmd.Flags().GetBool("generate-config")
+		if err != nil {
+			fmt.Printf("error retrieving generate-config flag\n")
+			os.Exit(1)
+		}
+		// Get generate participants file flag
+		generateParticipantsFile, err := cmd.Flags().GetBool("generate-participants")
+		if err != nil {
+			fmt.Printf("error retrieving generate-participants flag: %v", err)
+			os.Exit(1)
+		}
+
+		// Generate config files if flags are set and exit the program
+		if generateConfigFile || generateParticipantsFile {
+			err := conf.GenerateConfigFiles(configPath, generateConfigFile, participantsPath, generateParticipantsFile)
 			if err != nil {
-				fmt.Println("No config file found. Generating Skeleton at ./config.yaml")
-				err = conf.GenerateConfigFile()
-				if err != nil {
-					fmt.Printf("error generating config file: %v\n", err)
-				}
+				fmt.Printf("error generating config files: %v\n", err)
 				os.Exit(1)
 			}
-			fmt.Printf("found ./config.yaml\n")
-			configPath = "./config.yaml"
+			os.Exit(0)
+		}
+		err = checkConfigFiles(configPath, participantsPath)
+		if err != nil {
+			fmt.Printf("error checking config files: %v\n", err)
+			os.Exit(1)
 		}
 		initConfig(configPath)
 
@@ -117,7 +144,7 @@ var rootCmd = &cobra.Command{
 
 			sender.Emailer = mgmailer.NewMailgunEmailer(emailDomain, apiKey)
 		}
-		err = sender.Send(participants)
+		err = sender.Send(participantsPath)
 		if err != nil {
 			fmt.Printf("error sending emails: %v\n", err)
 			os.Exit(1)
@@ -133,10 +160,13 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolP("dry-run", "t", false, "dry-run will print a list rather than emailing people")
+	rootCmd.Flags().BoolP("dry-run", "d", false, "dry-run will print a list rather than emailing people")
 	rootCmd.Flags().StringP("participants", "p", "", "a csv file with participants (required)")
 	rootCmd.Flags().StringP("email-template", "e", "", "a go template file for the email body")
 	rootCmd.Flags().StringP("config", "c", "", "A configuration file for the application (required)")
+	rootCmd.Flags().BoolP("generate-config", "", false, "generate a config file. Note that this will overwrite an existing config file, and the application will not run. Can be used with the --config flag to specify a path and name")
+	rootCmd.Flags().BoolP("generate-participants", "", false, "generate a participants file. Note that this will overwrite an existing participants file of the same name, and the application will not run. Can be used with the --participants flag to specify a path and name")
+
 }
 
 func initConfig(configPath string) {
