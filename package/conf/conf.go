@@ -17,6 +17,25 @@ func GenerateConfigFile() error {
 				Content: []*yaml.Node{
 					{
 						Kind:  yaml.ScalarNode,
+						Value: "mailgun",
+					},
+					{
+						Kind: yaml.MappingNode,
+						Content: []*yaml.Node{
+							{
+								Kind:  yaml.ScalarNode,
+								Value: "apikey",
+							},
+							{
+								Kind:        yaml.ScalarNode,
+								Style:       yaml.DoubleQuotedStyle,
+								Value:       "abc123",
+								LineComment: "# This is the mailgun api key",
+							},
+						},
+					},
+					{
+						Kind:  yaml.ScalarNode,
 						Value: "email",
 					},
 					{

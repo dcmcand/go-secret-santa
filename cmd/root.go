@@ -41,7 +41,6 @@ var rootCmd = &cobra.Command{
 		// Get config
 		configPath, err := cmd.Flags().GetString("config")
 		if err != nil || configPath == "" {
-			fmt.Printf("No Config path set\n")
 			_, err := os.Stat("./config.yaml")
 			if err != nil {
 				fmt.Println("No config file found. Generating Skeleton at ./config.yaml")
@@ -110,7 +109,13 @@ var rootCmd = &cobra.Command{
 		if dryRun {
 			sender.Emailer = &fakeMailer.Mailer{}
 		} else {
-			sender.Emailer = mgmailer.NewMailgunEmailer(emailDomain, "abc123")
+			apiKey := viper.GetString("mailgun.apikey")
+			if apiKey == "" {
+				fmt.Printf("Please set a mailgun api key in the config file\n")
+				os.Exit(1)
+			}
+
+			sender.Emailer = mgmailer.NewMailgunEmailer(emailDomain, apiKey)
 		}
 		err = sender.Send(participants)
 		if err != nil {

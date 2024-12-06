@@ -21,5 +21,9 @@
 go.work
 go.work.sum
 
+# Application Specific Files
+config.yaml
+go-secret-santa
+
 # env file
 .env
