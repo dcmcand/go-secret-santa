@@ -2,6 +2,15 @@
 
 A Go-based Secret Santa script that pairs participants and sends them their Secret Santa assignments via email.
 
+## Prerequisites
+
+Before you begin, ensure you have the following:
+
+1. **Mailgun API Key**: You need a Mailgun API key to send emails. You can sign up for a Mailgun account and get your API key from the Mailgun dashboard.
+2. **Email Domain**: You need a domain configured in Mailgun to send emails from. This domain will be used to create the sender's email address.
+
+Currently, Mailgun is the only supported email sender, but support for other email services may be added in the future.
+
 ## Installation
 
 ### Build from source
@@ -52,7 +61,7 @@ On Windows, download the `.zip` file and extract it using your preferred method.
     If the `config.yaml` file does not exist, you can generate a skeleton configuration file:
 
     ```sh
-    go run main.go --generate-config
+    ./go-secret-santa --generate-config
     ```
 
     This will create a [config.yaml](http://_vscodecontentref_/2) file with the following structure:
@@ -73,7 +82,7 @@ On Windows, download the `.zip` file and extract it using your preferred method.
     If the [participants.csv](http://_vscodecontentref_/3) file does not exist, you can generate a skeleton participants file:
 
     ```sh
-    go run main.go --generate-participants
+    ./go-secret-santa --generate-participants
     ```
 
     This will create a [participants.csv](http://_vscodecontentref_/4) file with the following structure:
